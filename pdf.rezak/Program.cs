@@ -11,7 +11,7 @@ namespace pdf.rezak
         static void Main(string[] args)
         {
             string pdfPath = "C:/Users/bakyt/Downloads/turk_quran.pdf"; // Путь к вашему PDF
-            string outputFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output_images");
+            string outputFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "output_images2");
 
             if (!File.Exists(pdfPath))
             {
@@ -55,16 +55,30 @@ namespace pdf.rezak
                 };
 
                 // Для теста обрабатываем только первые 5 страниц
-                int pagesToProcess = Math.Min(5, pageCount);
+                int pagesToProcess = Math.Min(616, pageCount);
                 Console.WriteLine($"Тестовый запуск: обработка первых {pagesToProcess} страниц с DPI {dpi}.");
 
                 for (int i = 0; i < pagesToProcess; i++)
                 {
+                    var newPageName = "";
+                    if(i < 9)
+                    {
+                        newPageName = $"page00{i + 1}";
+                    }
+                    else if(i < 99)
+                    {
+                        newPageName = $"page0{i + 1}";
+                    }
+                    else
+                    {
+                        newPageName = $"page{i + 1}";
+                    }
+
                     // Рендерим страницу в SKBitmap
-                    using SKBitmap original = Conversion.ToImage(pdfBytes, page: i, options: renderOptions);
+                    using SKBitmap original = Conversion.ToImage(pdfBytes, page: i+1, options: renderOptions);
                     if (original == null)
                     {
-                        Console.WriteLine($"Ошибка рендеринга страницы {i + 1}");
+                        Console.WriteLine($"Ошибка рендеринга страницы {newPageName}");
                         continue;
                     }
 
@@ -74,18 +88,18 @@ namespace pdf.rezak
                     //int topCrop = (int)Math.Round(180.0 * dpi / 72.0);
                     //int bottomCrop = topCrop;
 
-                    int leftCrop = 120;
-                    int rightCrop = 120;
-                    int topCrop = 90;
-                    int bottomCrop = 90;
+                    int leftCrop = 195;
+                    int rightCrop = 195;
+                    int topCrop = 160;
+                    int bottomCrop = 160;
 
                     int newWidth = original.Width - (leftCrop + rightCrop);
                     int newHeight = original.Height - (topCrop + bottomCrop);
 
                     if (newWidth <= 0 || newHeight <= 0)
                     {
-                        Console.WriteLine($"Страница {i + 1} слишком мала для обрезки ({original.Width}x{original.Height}). Сохранение без обрезки.");
-                        string uncroppedPath = Path.Combine(outputFolder, $"{i + 1}.png");
+                        Console.WriteLine($"Страница {newPageName} слишком мала для обрезки ({original.Width}x{original.Height}). Сохранение без обрезки.");
+                        string uncroppedPath = Path.Combine(outputFolder, $"{newPageName}.png");
                         using var saveStream = File.OpenWrite(uncroppedPath);
                         original.Encode(saveStream, SKEncodedImageFormat.Png, 100);
                         continue;
@@ -100,7 +114,7 @@ namespace pdf.rezak
                     }
 
                     // Сохраняем как PNG с максимальным сжатием
-                    string outputPath = Path.Combine(outputFolder, $"{i + 1}.png");
+                    string outputPath = Path.Combine(outputFolder, $"{newPageName}.png");
                     using (var pixmap = cropped.PeekPixels())
                     {
                         if (pixmap != null)
@@ -115,7 +129,7 @@ namespace pdf.rezak
                         }
                     }
 
-                    Console.WriteLine($"Обработана страница {i + 1}/{pagesToProcess} -> {outputPath}");
+                    Console.WriteLine($"Обработана страница {newPageName}/{pagesToProcess} -> {outputPath}");
                 }
 
                 stopwatch.Stop();
